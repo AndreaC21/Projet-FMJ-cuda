@@ -8,6 +8,8 @@ using namespace std;
 
 #include "Ensemble.cu"
 
+// CHANGMENT //
+
 __global__ void lance_calcul(Mandelbrot m, sf::Uint8 *p,int w, int h,int *b)
 {
  m.calcul(p,w,h,b);
