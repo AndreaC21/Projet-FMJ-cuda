@@ -1,0 +1,10 @@
+// ** A CAHUE FOIS ** //
+
+export PATH=/usr/local/cuda-11.1/bin/:$PATH
+export LD_LIBRARY_PATH=/usr/local/cuda-11.1/lib64:$LB_LIBRARY_PATH
+
+// ** POUR COMPILER ** //
+
+nvcc -arch=compute_50 -code=sm_50 vect-v2.cu -o vect
+
+
