@@ -8,7 +8,7 @@ Ce programme va générer des images issue d'un calcul de **Mandelbrot** ou **Ju
 Pour Mandelbrot, un zoom sera effectué sur la partie inférieur droite, puis supérieure droite.
 Pour Julia, un changement de la constante c est effectué.
 
-Les constantes sont width,height,nb_iteration sont definis au debut du main
+Les constantes sont **width**,**height**,**nb_iteration** sont definis au debut du main
 
 ### Pré-requis : 
 * SFML 
@@ -16,7 +16,7 @@ Les constantes sont width,height,nb_iteration sont definis au debut du main
 	
 ### Compilation :
 
-nvcc -arch=compute_50 -code=sm_50 main.cu -o fractales -lsfml-graphics --expt-relaxed-constexpr
+`<nvcc -arch=compute_50 -code=sm_50 main.cu -o fractales -lsfml-graphics --expt-relaxed-constexpr>`
 
 * -arch=compute_50
 * -code=sm_50 
