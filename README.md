@@ -16,7 +16,7 @@ Les constantes sont **width**,**height**,**nb_iteration** sont definis au debut 
 	
 ### Compilation :
 
-`<nvcc -arch=compute_50 -code=sm_50 main.cu -o fractales -lsfml-graphics --expt-relaxed-constexpr>`
+`nvcc -arch=compute_50 -code=sm_50 main.cu -o fractales -lsfml-graphics --expt-relaxed-constexpr`
 
 * -arch=compute_50
 * -code=sm_50 
@@ -24,7 +24,6 @@ Les constantes sont **width**,**height**,**nb_iteration** sont definis au debut 
 
 * -lsfml-graphics : utilisation des images de SFML
 * --expt-relaxed-constexpr : utilisation des opérations sur les nombres complexes
-
 
 ### Avant la première compilation :
 
