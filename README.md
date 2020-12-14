@@ -5,6 +5,9 @@ Calcul des ensembles de Mandelbrot et Julia avec cuda
 ### Description :
 
 Ce programme va générer des images issue d'un calcul de **Mandelbrot** ou **Julia**, puis créer une vidéo a partir de ces images.
+* Les images sont stockés dans la dossier Resultat.
+* Les vidéos sont stockés dans le dossier courant
+
 Pour Mandelbrot, un zoom sera effectué sur la partie inférieur droite, puis supérieure droite.
 Pour Julia, un changement de la constante c est effectué.
 
