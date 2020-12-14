@@ -10,34 +10,37 @@ class Ensemble
 {
 
 protected:
-  float x,y;
-  complex<double> c,z;
-  int rang; // nombre iteration maximum
+  float x,y,zoom;
+  int rang,id_image; // nombre iteration maximum
   sf::Image image;
   string nomImage;
 
 public:
   Ensemble(){}
-  Ensemble(float x,float y,int r)
+  Ensemble(float x,float y,int r, float zoom, int id_image)
   {
     this->x = x;
     this->y = y;
     this->rang = r;
+    this->zoom = zoom;
+    this->id_image = id_image;
   }
   Ensemble( Ensemble& e)
   {
     this->x = e.x;
     this->y = e.y;
+    this->zoom = e.zoom;
     this->rang = e.rang;
     this->image = e.image;
     this->nomImage = e.nomImage;
+    this->id_image = e.id_image;
   }
   ~Ensemble()
   {
 
   }
-  __device__ virtual complex<double> init_c(int col, int row, int w){printf("here3");return complex<double>(0,0);}
-  __device__ virtual complex<double> init_z(int col, int row, int w){return complex<double>(0,0);}
+  __device__ virtual complex<double> init_c(int col, int row, int w) = 0;
+  __device__ virtual complex<double> init_z(int col, int row, int w) = 0;
 
   __device__ virtual void calcul(sf::Uint8 *p,int w, int h,int *b) = 0;
 
@@ -53,13 +56,19 @@ public:
   {
     return this->nomImage+".png";
   }
+  __device__  __host__ float getZoom() const
+  {
+    return this->zoom;
+  }
 
   __host__ void saveImage(int w,int h, sf::Uint8 *pixels)
   {
     this->image.create(w,h,pixels);
-    this->nomImage.append("-size"+to_string(w)+"x"+to_string(w));
-    this->image.saveToFile(this->nomImage+".png");
+    //this->nomImage.append("-size"+to_string(w)+"x"+to_string(w));
+    this->image.saveToFile("Resultat/"+this->nomImage+".png");
   }
+
+
 
 };
 
@@ -68,35 +77,51 @@ class Mandelbrot : public Ensemble
 public:
   // Mandelbrot est toujours compris entre -2.1 et 0.6 sur l'axe des abscisse et entre -1.2 et 1.2 sur l'axe des ordonnées.
 
-  Mandelbrot(){}
-  Mandelbrot(int iteration_max):Ensemble(-2.1f,-1.2f,iteration_max)
+  Mandelbrot() : Ensemble(-2.1f,-1.2f,1000,3,0)
   {
-    this->nomImage = "Mandelbrot";
-    this->nomImage.append("-it_"+to_string(iteration_max));
+    this->nomImage = "Mandelbrot"+to_string(0);
+    //this->nomImage.append("-it_"+to_string(1000));
+    //this->nomImage.append("-zoom_"+to_string(3));
   }
-
-  __device__ virtual complex<double> init_c(int col, int row, int w) override
+  Mandelbrot(int iteration_max):Ensemble(-2.1f,-1.2f,iteration_max,3,0)
+  {
+    this->nomImage = "Mandelbrot"+to_string(0);
+  //  this->nomImage.append("-it_"+to_string(iteration_max));
+    //this->nomImage.append("-zoom_"+to_string(3));
+  }
+  Mandelbrot(float x, float y,int iteration_max,float zoom,int id_image):Ensemble(x,y,iteration_max,zoom,id_image)
+  {
+    this->nomImage = "Mandelbrot"+to_string(id_image);
+  //  this->nomImage.append("-it_"+to_string(iteration_max));
+    //this->nomImage.append("-zoom_"+to_string(zoom));
+  }
+  Mandelbrot(const Mandelbrot& e)
+  {
+    this->x = e.x;
+    this->y = e.y;
+    this->zoom = e.zoom;
+    this->rang = e.rang;
+    this->image = e.image;
+    this->nomImage = e.nomImage;
+  }
+  __device__ complex<double> init_c(int col, int row, int w) override
   {
     //c = x + y
-    printf("here");
-    return complex<double>( ((double)col / w) * 3 +this->x,((double)row / w) * 3 +this->y);
+    return complex<double>( ((double)col / w) * 10 +this->x,((double)row / w) * 10 +this->y);
   }
   __device__ virtual complex<double> init_z(int col, int row, int w)
   {
-    printf("z");
     // z0 = 0
     return complex<double>(0,0);
   }
-
-
   __device__ void calcul(sf::Uint8 *p,int w, int h,int *b) override
   {
-    //printf("h");
+    //printf("%d\n",this->x);
     int row = blockIdx.y * blockDim.y + threadIdx.y;  // WIDTH
     int col = blockIdx.x * blockDim.x + threadIdx.x;  // HEIGHT
     int idx = w*row + col;
 
-    complex<double> c( ((double)col / w) * 3 - 2.1f,((double)row / w) * 3 - 1.2f);
+    complex<double> c( ((double)col / w) * this->zoom + this->x,((double)row / h) * this->zoom + this->y);
 
     complex<double> z(0,0);
     double z_real = z.real();
@@ -125,40 +150,73 @@ public:
   }
 
   }
+
 };
 
 class Julia : public Ensemble
 {
-public:
+  private :
+    complex<double> c;
+  public:
 
-  Julia(){}
-  Julia(int iteration_max):Ensemble(-1.1f,-1.1f,iteration_max)
+  Julia() : Ensemble(-1.5f,-1.5f,1000,3,0)
   {
-    this->nomImage = "Julia";
-    this->nomImage.append("-it_"+to_string(iteration_max));
+    this->nomImage = "Julia"+to_string(0);
+    c = complex<double>(0.285,0.01);
+  //  this->nomImage.append("-it_"+to_string(1000));
+    //this->nomImage.append("-zoom_"+to_string(3));
+  }
+  Julia(int iteration_max):Ensemble(-1.5f,-1.5f,iteration_max,3,0)
+  {
+    this->nomImage = "Julia"+to_string(0);
+    c = complex<double>(0.285,0.01);
+    //this->nomImage.append("-it_"+to_string(iteration_max));
+    //this->nomImage.append("-zoom_"+to_string(3));
+  }
+  Julia(complex<double> c,int iteration_max,int id_image) : Ensemble(-1.5f,-1.5f,iteration_max,3,id_image)
+  {
+    this->nomImage = "Julia"+to_string(id_image);
+    this->c = c;
   }
 
-  __device__ virtual complex<double> init_c(int col, int row, int w) override
+  Julia(const Julia& e)
+  {
+    this->x = e.x;
+    this->y = e.y;
+    this->zoom = e.zoom;
+    this->rang = e.rang;
+    this->image = e.image;
+    this->nomImage = e.nomImage;
+    this->id_image = e.id_image;
+    this->c = e.c;
+  }
+
+  __device__  complex<double> init_c(int col, int row, int w) override
   {
     //c = constante
     return complex<double>(0.285,0.01);
   }
-  __device__ virtual complex<double> init_z(int col, int row, int w)
+  __device__ complex<double> init_z(int col, int row, int w)
   {
     //z = x + y
       return complex<double>( ((double)col / w) * 3 +this->x,((double)row / w) * 3 +this->y);
   }
 
+  __host__ complex<double> getConstanteC()
+  {
+    return this->c;
+  }
+
   __device__ void calcul(sf::Uint8 *p,int w, int h,int *b) override
   {
-    //printf("h");
-    int row = blockIdx.y * blockDim.y + threadIdx.y;  // WIDTH
-    int col = blockIdx.x * blockDim.x + threadIdx.x;  // HEIGHT
+
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
     int idx = w*row + col;
 
-    complex<double> c(0.285,0.01);
+    complex<double> c(this->c);
 
-    complex<double> z( ((double)col / w) * 3 +this->x,((double)row / w) * 3 +this->y);
+    complex<double> z( ((double)col / w) * this->zoom +this->x,((double)row / w) * this->zoom +this->y);
     double z_real = z.real();
     double z_imag = z.imag();
 
@@ -185,4 +243,5 @@ public:
   }
 
   }
+
 };
