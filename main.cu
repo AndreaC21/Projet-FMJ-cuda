@@ -40,7 +40,6 @@ int main(void)
   const int iteration_max = 1000;
   //const fractales fractale_choisi = 0;
 
-
   vector<Mandelbrot> list_mand = {Mandelbrot(iteration_max)};
 
   // vers bas droite
@@ -50,7 +49,6 @@ int main(void)
   //vers haut droite
   list_mand.push_back(Mandelbrot(-0.5f,-0.7f,iteration_max,1,3));
   list_mand.push_back(Mandelbrot(-0.5f,-1.2f,iteration_max,1,4));
-
 
   vector<Julia> list_Julia = {Julia(iteration_max)};
 
@@ -78,6 +76,7 @@ int main(void)
 
   dim3 bloc(16, 16);
   dim3 grille(width / bloc.x, height / bloc.y);
+
   // JULIA //
   for ( int i = 0 ; i < list_Julia.size() ; ++i)
   {
@@ -103,7 +102,7 @@ int main(void)
   }
 
   // creation video
- system("ffmpeg -y -r 1 -i Resultat/Mandelbrot%d.png mandelbrot.mp4");
+  system("ffmpeg -y -r 1 -i Resultat/Mandelbrot%d.png mandelbrot.mp4");
 
   cudaDeviceReset();
 
@@ -112,7 +111,6 @@ int main(void)
 
   cudaFree(d_pixels);
   cudaFree(d_b);
-
 
   cout << "\n\nDeux vidéos ont été générés dans le dossier courant:\n-mandelbrot.mp4 avec un zoom\n-julia.mp4 avec différentes valeurs de c\n\n" << endl;
   return 0;

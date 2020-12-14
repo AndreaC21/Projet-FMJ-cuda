@@ -3,7 +3,7 @@
 #include <complex>
 #include <cmath>
 #include <SFML/Graphics.hpp>
-//#include <cuda/std/*>
+
 using namespace std;
 
 class Ensemble
@@ -39,27 +39,11 @@ public:
   {
 
   }
-  __device__ virtual complex<double> init_c(int col, int row, int w) = 0;
-  __device__ virtual complex<double> init_z(int col, int row, int w) = 0;
-
   __device__ virtual void calcul(sf::Uint8 *p,int w, int h,int *b) = 0;
 
-  __device__ int getIterationMax() const
-  {
-    return this->rang;
-  }
-  __device__ sf::Image getImage() const
-  {
-    return this->image;
-  }
-  __device__ string getNom() const
-  {
-    return this->nomImage+".png";
-  }
-  __device__  __host__ float getZoom() const
-  {
-    return this->zoom;
-  }
+  __device__ int getIterationMax() const  { return this->rang;}
+
+  __device__  __host__ float getZoom() const  {  return this->zoom; }
 
   __host__ void saveImage(int w,int h, sf::Uint8 *pixels)
   {
@@ -68,15 +52,11 @@ public:
     this->image.saveToFile("Resultat/"+this->nomImage+".png");
   }
 
-
-
 };
 
 class Mandelbrot : public Ensemble
 {
 public:
-  // Mandelbrot est toujours compris entre -2.1 et 0.6 sur l'axe des abscisse et entre -1.2 et 1.2 sur l'axe des ordonnées.
-
   Mandelbrot() : Ensemble(-2.1f,-1.2f,1000,3,0)
   {
     this->nomImage = "Mandelbrot"+to_string(0);
@@ -86,14 +66,10 @@ public:
   Mandelbrot(int iteration_max):Ensemble(-2.1f,-1.2f,iteration_max,3,0)
   {
     this->nomImage = "Mandelbrot"+to_string(0);
-  //  this->nomImage.append("-it_"+to_string(iteration_max));
-    //this->nomImage.append("-zoom_"+to_string(3));
   }
   Mandelbrot(float x, float y,int iteration_max,float zoom,int id_image):Ensemble(x,y,iteration_max,zoom,id_image)
   {
     this->nomImage = "Mandelbrot"+to_string(id_image);
-  //  this->nomImage.append("-it_"+to_string(iteration_max));
-    //this->nomImage.append("-zoom_"+to_string(zoom));
   }
   Mandelbrot(const Mandelbrot& e)
   {
@@ -104,21 +80,11 @@ public:
     this->image = e.image;
     this->nomImage = e.nomImage;
   }
-  __device__ complex<double> init_c(int col, int row, int w) override
-  {
-    //c = x + y
-    return complex<double>( ((double)col / w) * 10 +this->x,((double)row / w) * 10 +this->y);
-  }
-  __device__ virtual complex<double> init_z(int col, int row, int w)
-  {
-    // z0 = 0
-    return complex<double>(0,0);
-  }
+
   __device__ void calcul(sf::Uint8 *p,int w, int h,int *b) override
   {
-    //printf("%d\n",this->x);
-    int row = blockIdx.y * blockDim.y + threadIdx.y;  // WIDTH
-    int col = blockIdx.x * blockDim.x + threadIdx.x;  // HEIGHT
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;  
     int idx = w*row + col;
 
     complex<double> c( ((double)col / w) * this->zoom + this->x,((double)row / h) * this->zoom + this->y);
@@ -129,7 +95,7 @@ public:
 
     float i = 0;
 
-    // On est oblige de decomposer les calcul pour les complex car les operator +,*,= de complex<double> sont inaccessible avec __device_
+    // On est oblige de decomposer les calcul pour les complex car les operator +,*,= de complex<double> sont inaccessible sur le GPU
     while ( (z_real*z_real+ z_imag*z_imag) < 4.0f && i < this->getIterationMax()) // |z| < 2 et i < nb_iteration_max |||| zi² + z² < 4
     {
       double tempo = z_real;
@@ -170,8 +136,6 @@ class Julia : public Ensemble
   {
     this->nomImage = "Julia"+to_string(0);
     c = complex<double>(0.285,0.01);
-    //this->nomImage.append("-it_"+to_string(iteration_max));
-    //this->nomImage.append("-zoom_"+to_string(3));
   }
   Julia(complex<double> c,int iteration_max,int id_image) : Ensemble(-1.5f,-1.5f,iteration_max,3,id_image)
   {
@@ -190,23 +154,6 @@ class Julia : public Ensemble
     this->id_image = e.id_image;
     this->c = e.c;
   }
-
-  __device__  complex<double> init_c(int col, int row, int w) override
-  {
-    //c = constante
-    return complex<double>(0.285,0.01);
-  }
-  __device__ complex<double> init_z(int col, int row, int w)
-  {
-    //z = x + y
-      return complex<double>( ((double)col / w) * 3 +this->x,((double)row / w) * 3 +this->y);
-  }
-
-  __host__ complex<double> getConstanteC()
-  {
-    return this->c;
-  }
-
   __device__ void calcul(sf::Uint8 *p,int w, int h,int *b) override
   {
 

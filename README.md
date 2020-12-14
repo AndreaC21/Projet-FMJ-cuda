@@ -2,21 +2,35 @@
 
 Calcul des ensembles de Mandelbrot et Julia avec cuda
 
-Pré-requis : 
+### Description :
+
+Ce programme va générer des images issue d'un calcul de **Mandelbrot** ou **Julia**, puis créer une vidéo a partir de ces images.
+Pour Mandelbrot, un zoom sera effectué sur la partie inférieur droite, puis supérieure droite.
+Pour Julia, un changement de la constante c est effectué.
+
+Les constantes sont width,height,nb_iteration sont definis au debut du main
+
+### Pré-requis : 
 * SFML 
 * cuda 11
 	
-Compilation :
+### Compilation :
 
 nvcc -arch=compute_50 -code=sm_50 main.cu -o fractales -lsfml-graphics --expt-relaxed-constexpr
 
--lsfml-graphics : utilisation des images de SFML
---expt-relaxed-constexpr : utilisation des opérations sur les nombres complexes
+* -arch=compute_50
+* -code=sm_50 
+*pour la compatibilité des versions netre nvidia et cuda avec ma machine, je dois utiliser ces options*
 
-Avant la première compilation :
+* -lsfml-graphics : utilisation des images de SFML
+* --expt-relaxed-constexpr : utilisation des opérations sur les nombres complexes
+
+
+### Avant la première compilation :
 
 * export PATH=/usr/local/cuda-11.1/bin/:$PATH
 * export LD_LIBRARY_PATH=/usr/local/cuda-11.1/lib64:$LB_LIBRARY_PATH
+
 
 
 
