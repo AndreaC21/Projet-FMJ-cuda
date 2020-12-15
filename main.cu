@@ -4,6 +4,7 @@
 #include <cmath>
 #include <SFML/Graphics.hpp>
 #include <vector>
+#include <regex>
 
 using namespace std;
 
@@ -31,39 +32,77 @@ void savePicture(Ensemble *e,int w, int h, sf::Uint8* pixels, int*b)
   }
   e->saveImage(w,h,pixels);
 }
-enum fractales { mandelbrot=0, julia=1};
 
+vector<string> split(const string& input, const string& regex) {
+    std::regex re(regex);
+    std::sregex_token_iterator
+        first{input.begin(), input.end(), re, -1},
+        last;
+    return {first, last};
+}
+
+fstream f;
+
+template <typename T>
+void lectureFichier(int& w, int&h, vector<T>& v, int it_max)
+{
+  vector<T> result;
+  string line;
+  string delimiter ="=";
+
+  getline (f,line);
+  w = stoi(split(line,delimiter)[1]);
+  getline (f,line);
+  h = stoi(split(line,delimiter)[1]);
+
+  int id_frame,i;
+  float x,y,zoom;
+  zoom = 3;
+  i = 0;
+  while ( getline (f,line) )
+    {
+      string s(line);
+      if( !s.empty() )
+      {
+        if (i==0) { id_frame = stoi(split(s,delimiter)[1]); ++i;}
+        else if (i==1) { x = stof(split(s,delimiter)[1]); ++i; }
+        else if (i==2) { y = stof(split(s,delimiter)[1]); ++i; }
+      }
+      else
+      {
+        i = 0;
+        v.push_back(T(x,y,it_max,zoom,id_frame));
+        zoom-=0.2f;
+      }
+    }
+    if ( f.eof() )
+    {
+      v.push_back(T(x,y,it_max,zoom,id_frame));
+    }
+}
 int main(void)
 {
-  const int width = 1024;
-  const int height = 1024;
+  //const int width = 1024;
+  //const int height = 1024;
   const int iteration_max = 1000;
-  //const fractales fractale_choisi = 0;
+  const string file_m ="config_mandelbrot.txt";
+  const string file_j ="config_julia.txt";
+  int width = 0;
+  int height = 0;
 
-  vector<Mandelbrot> list_mand = {Mandelbrot(iteration_max)};
+  // lecture fichier config de Mandelbrot
+  f.open(file_m);
+	if ( !f.good()) throw runtime_error("impossible ouvrir fichier config");
+  vector<Mandelbrot> list_mandelbrot{};
+  lectureFichier<Mandelbrot>(width,height,list_mandelbrot,iteration_max);
+  f.close();
 
-  // vers bas droite
-  list_mand.push_back(Mandelbrot(-1.2f,-0.7f,iteration_max,2,1));
-  list_mand.push_back(Mandelbrot(-0.5f,0.2f,iteration_max,1,2));
-
-  //vers haut droite
-  list_mand.push_back(Mandelbrot(-0.5f,-0.7f,iteration_max,1,3));
-  list_mand.push_back(Mandelbrot(-0.5f,-1.2f,iteration_max,1,4));
-
-  vector<Julia> list_Julia = {Julia(iteration_max)};
-
-  vector<complex<double>> list_complexC;
-  list_complexC.push_back(complex<double>(0.5f,0.01f));
-  list_complexC.push_back(complex<double>(0.3f,0.01f));
-  list_complexC.push_back(complex<double>(-0.75f,0.01f));
-  list_complexC.push_back(complex<double>(-0.5f,0.64f));
-  list_complexC.push_back(complex<double>(-0.818f,0.165f));
-  list_complexC.push_back(complex<double>(-0.51f,0.56f));
-
-  for (int i = 0 ; i< list_complexC.size() ; ++i)
-  {
-    list_Julia.push_back(Julia(list_complexC[i],iteration_max,i));
-  }
+  // lectur du fichier config de Julia
+  f.open(file_j);
+  if ( !f.good()) throw runtime_error("impossible ouvrir fichier config");
+  vector<Julia> list_julia;
+  lectureFichier<Julia>(width,height,list_julia,iteration_max);
+  f.close();
 
   sf::Uint8 *pixels,*d_pixels;
   int *b,*d_b;
@@ -77,28 +116,29 @@ int main(void)
   dim3 bloc(16, 16);
   dim3 grille(width / bloc.x, height / bloc.y);
 
+
   // JULIA //
-  for ( int i = 0 ; i < list_Julia.size() ; ++i)
+  for ( int i = 0 ; i < list_julia.size() ; ++i)
   {
-    lance_calcul<<<grille,bloc>>>(list_Julia[i],d_pixels,width,height,d_b);
+    lance_calcul<<<grille,bloc>>>(list_julia[i],d_pixels,width,height,d_b);
     printf("CUDA error: %s\n", cudaGetErrorString(cudaGetLastError()));
     cudaDeviceSynchronize();
     //cudaMemcpy(pixels,d_pixels,sizeof(sf::Uint8) * width * height,cudaMemcpyDeviceToHost);
     cudaMemcpy(b,d_b,sizeof(int) * width * height,cudaMemcpyDeviceToHost);
 
-    savePicture(&list_Julia[i],width,height,pixels,b);
+    savePicture(&list_julia[i],width,height,pixels,b);
   }
   // creation video
   system("ffmpeg -y -r 1 -i Resultat/Julia%d.png julia.mp4");
 
   // MANDELBROT //
-  for ( int i = 0 ; i < list_mand.size() ; ++i)
+  for ( int i = 0 ; i < list_mandelbrot.size() ; ++i)
   {
-    lance_calcul<<<grille,bloc>>>(list_mand[i],d_pixels,width,height,d_b);
+    lance_calcul<<<grille,bloc>>>(list_mandelbrot[i],d_pixels,width,height,d_b);
     printf("CUDA error: %s\n", cudaGetErrorString(cudaGetLastError()));
     cudaDeviceSynchronize();
     cudaMemcpy(b,d_b,sizeof(int) * width * height,cudaMemcpyDeviceToHost);
-    savePicture(&list_mand[i],width,height,pixels,b);
+    savePicture(&list_mandelbrot[i],width,height,pixels,b);
   }
 
   // creation video

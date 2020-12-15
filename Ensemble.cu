@@ -84,7 +84,7 @@ public:
   __device__ void calcul(sf::Uint8 *p,int w, int h,int *b) override
   {
     int row = blockIdx.y * blockDim.y + threadIdx.y;
-    int col = blockIdx.x * blockDim.x + threadIdx.x;  
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
     int idx = w*row + col;
 
     complex<double> c( ((double)col / w) * this->zoom + this->x,((double)row / h) * this->zoom + this->y);
@@ -137,10 +137,15 @@ class Julia : public Ensemble
     this->nomImage = "Julia"+to_string(0);
     c = complex<double>(0.285,0.01);
   }
-  Julia(complex<double> c,int iteration_max,int id_image) : Ensemble(-1.5f,-1.5f,iteration_max,3,id_image)
+  Julia(complex<double> c,int iteration_max,float zoom,int id_image) : Ensemble(-1.5f,-1.5f,iteration_max,3,id_image)
   {
     this->nomImage = "Julia"+to_string(id_image);
     this->c = c;
+  }
+  Julia(float cr, float ci,int iteration_max,float zoom,int id_image) : Ensemble(-1.5f,-1.5f,iteration_max,3,id_image)
+  {
+    this->nomImage = "Julia"+to_string(id_image);
+    this->c = complex<double>(cr,ci);
   }
 
   Julia(const Julia& e)

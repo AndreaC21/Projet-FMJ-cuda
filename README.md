@@ -8,10 +8,15 @@ Ce programme va générer des images issue d'un calcul de **Mandelbrot** ou **Ju
 * Les images sont stockés dans la dossier Resultat.
 * Les vidéos sont stockés dans le dossier courant
 
-Pour Mandelbrot, un zoom sera effectué sur la partie inférieur droite, puis supérieure droite.
+Pour Mandelbrot, un zoom sera effectué sur la partie inférieur droite
 Pour Julia, un changement de la constante c est effectué.
 
 Les constantes sont **width**,**height**,**nb_iteration** sont definis au debut du main
+
+### Fichier config :
+
+* config_mandelbrot.txt : zoom sur la partie inferieure droite
+* config_julia.txt : contient des jolies valeurs de la constante c
 
 ### Pré-requis : 
 * SFML 
